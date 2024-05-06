@@ -1,3 +1,5 @@
+package j8.futures;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -7,13 +9,13 @@ public class FT {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         CompletableFuture<Integer> result = CompletableFuture.completedFuture(2);
         System.out.println("completed future " + result.get());  // 2
-        System.out.println("thenApply if returns a value is internally converted to cf " + result.thenApply(v -> v * 2).get());  // 4
-        System.out.println("  so thenApply = map");
+        System.out.println("if thenApply returns a value is internally converted to cf " + result.thenApply(v -> v * 2).get());  // 4
+        System.out.println("  so we can consider that thenApply = optional.map.   it could be thought as result.map(v->v*2)");
 
-        System.out.println("thenApply if returns a cf which is internally nested to cf " + result.thenApply(v -> CompletableFuture.completedFuture(v * 2)).get().get());  // 4
+        System.out.println("if thenApply returns a cf which is internally nested to cf " + result.thenApply(v -> CompletableFuture.completedFuture(v * 2)).get().get());  // 4
 
         System.out.println("thenCompose returns a new cf " + result.thenCompose(v -> CompletableFuture.completedFuture(v * 2)).get()); //4
-        System.out.println("  so thenCompose = flatmap");
+        System.out.println("  so thenCompose = optional.flatmap");
 
 
         result.thenAccept(v -> System.out.println("thenAccept does not change the cf, only gets v " + v));
@@ -48,7 +50,16 @@ public class FT {
                 System.out.println(Thread.currentThread().getName())
         );
 
+        CompletableFuture<Void> cf = CompletableFuture.runAsync(() -> {
+            System.out.println("runAsync runs in another thread and returns void" +Thread.currentThread().getName());
+        });
+
+        System.out.println(" runAsync done: "+cf.isDone());
+        cf.get();
+        System.out.println(" runAsync done: "+cf.isDone());
+
         System.out.println(" deadlock ");
+
 
 /*
         CompletableFuture<Integer>[] futures = new CompletableFuture[50];
@@ -80,7 +91,7 @@ public class FT {
   /*          CompletableFuture<Integer> r2 = result.thenApplyAsync(vv ->
             {
                 return 3;
-            },e).thenCompose(FT::processValue);
+            },e).thenCompose(j8.futures.FT::processValue);
             return processValue(r2); //works
             //            return processValue(r2.join()); deadlock
 
